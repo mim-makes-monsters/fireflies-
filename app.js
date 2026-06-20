@@ -1,3 +1,16 @@
+// ---------- Case data: prefer local admin edits (same browser), else bundled cases.js ----------
+(function loadActiveCases(){
+  try{
+    const stored = localStorage.getItem('fireflies_admin_cases');
+    if (stored){
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length){
+        window.CASES = parsed;
+      }
+    }
+  } catch(e){ /* fall through to bundled CASES from cases.js */ }
+})();
+
 // ---------- Firefly ambient canvas ----------
 (function(){
   const canvas = document.getElementById('firefly-canvas');
