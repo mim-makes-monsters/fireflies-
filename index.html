@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fireflies — a tribute by projectAdnan</title>
+<meta name="description" content="A tribute to the fireflies that died too early.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0a0b;
+    --bg-elevated: #141416;
+    --surface: #1c1c1e;
+    --surface-hover: #232325;
+    --ink: #f5f4f0;
+    --ink-dim: #b8b6b0;
+    --ink-faint: #8a8a85;
+    --line: #2a2a2c;
+    --line-soft: #1f1f21;
+    --glow: #e8d9a8;
+    --glow-soft: rgba(232, 217, 168, 0.45);
+    --glow-dim: rgba(232, 217, 168, 0.18);
+    --status-found: #9fb89f;
+    --status-unresolved: #c9a96e;
+    --status-mystery: #a08fb0;
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, .display{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  .mono{
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+  }
+
+  a{ color: inherit; text-decoration: none; }
+
+  ::selection{ background: var(--glow-dim); color: var(--ink); }
+
+  /* ---------- Ambient firefly canvas ---------- */
+  #firefly-canvas{
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    #firefly-canvas{ display: none; }
+  }
+
+  /* ---------- Layout shell ---------- */
+  .shell{
+    position: relative;
+    z-index: 1;
+  }
+
+  .container{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  /* ---------- Nav ---------- */
+  nav{
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    background: rgba(10, 10, 11, 0.62);
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .nav-inner{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand{
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .brand-mark{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 1.3rem;
+    letter-spacing: -0.01em;
+  }
+
+  .brand-by{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+  }
+
+  .nav-links{
+    display: flex;
+    gap: 28px;
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+  }
+
+  .nav-links a{
+    transition: color 0.25s ease;
+    position: relative;
+  }
+
+  .nav-links a:hover, .nav-links a:focus-visible{
+    color: var(--glow);
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    min-height: 86vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 80px 28px 60px;
+    position: relative;
+  }
+
+  .hero-eyebrow{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--glow);
+    opacity: 0;
+    animation: riseIn 1.2s ease 0.2s forwards;
+    margin-bottom: 28px;
+  }
+
+  .hero h1{
+    font-size: clamp(3rem, 9vw, 6.5rem);
+    line-height: 0.96;
+    font-weight: 400;
+    color: var(--ink);
+    opacity: 0;
+    animation: riseIn 1.4s ease 0.45s forwards;
+  }
+
+  .hero h1 em{
+    font-style: italic;
+    font-weight: 500;
+    background: linear-gradient(180deg, var(--ink) 0%, var(--glow-soft) 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-tag{
+    margin-top: 26px;
+    font-size: clamp(0.95rem, 2vw, 1.15rem);
+    color: var(--ink-dim);
+    font-weight: 300;
+    max-width: 480px;
+    opacity: 0;
+    animation: riseIn 1.4s ease 0.75s forwards;
+    letter-spacing: 0.01em;
+  }
+
+  .hero-scroll{
+    margin-top: 64px;
+    opacity: 0;
+    animation: riseIn 1.2s ease 1.1s forwards, float 3.5s ease-in-out 2.3s infinite;
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hero-scroll svg{ width: 14px; height: 14px; opacity: 0.6; }
+
+  @keyframes riseIn{
+    from{ opacity: 0; transform: translateY(16px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float{
+    0%, 100%{ transform: translateY(0); }
+    50%{ transform: translateY(6px); }
+  }
+
+  /* ---------- Stats strip ---------- */
+  .stats{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .stat{
+    padding: 36px 28px;
+    text-align: center;
+    border-right: 1px solid var(--line-soft);
+  }
+
+  .stat:last-child{ border-right: none; }
+
+  .stat-num{
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 400;
+  }
+
+  .stat-num.found{ color: var(--status-found); }
+  .stat-num.unresolved{ color: var(--status-unresolved); }
+  .stat-num.mystery{ color: var(--status-mystery); }
+
+  .stat-label{
+    margin-top: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- Section heading ---------- */
+  .section{
+    padding: 100px 0 40px;
+  }
+
+  .section-head{
+    margin-bottom: 48px;
+    max-width: 620px;
+  }
+
+  .section-eyebrow{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--glow);
+    margin-bottom: 14px;
+  }
+
+  .section-head h2{
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 400;
+    line-height: 1.15;
+  }
+
+  .section-head p{
+    margin-top: 16px;
+    color: var(--ink-dim);
+    font-size: 0.98rem;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  /* ---------- Filters ---------- */
+  .filters{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 44px;
+  }
+
+  .filter-btn{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    padding: 9px 18px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+  }
+
+  .filter-btn:hover{
+    border-color: var(--ink-faint);
+    color: var(--ink);
+  }
+
+  .filter-btn.active{
+    background: var(--glow-dim);
+    border-color: var(--glow-soft);
+    color: var(--glow);
+  }
+
+  .filter-btn .dot{
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: middle;
+  }
+
+  /* ---------- Case grid ---------- */
+  .case-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 18px;
+    margin-bottom: 40px;
+  }
+
+  .case-card{
+    background: rgba(28, 28, 30, 0.5);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 0;
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    cursor: pointer;
+    transition: transform 0.45s cubic-bezier(.2,.8,.2,1), border-color 0.45s ease, background 0.45s ease, box-shadow 0.45s ease;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  .case-card-body{
+    padding: 22px 24px 26px;
+  }
+
+  .case-portrait{
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background: linear-gradient(160deg, #1a1a1c 0%, #101011 100%);
+    overflow: hidden;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .case-portrait img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    filter: grayscale(100%) contrast(1.05) brightness(0.92);
+    transition: filter 0.5s ease, transform 0.6s ease;
+    display: block;
+  }
+
+  .case-card:hover .case-portrait img{
+    filter: grayscale(40%) contrast(1.05) brightness(1);
+    transform: scale(1.035);
+  }
+
+  .case-portrait::after{
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(10,10,11,0) 55%, rgba(10,10,11,0.55) 100%);
+    pointer-events: none;
+  }
+
+  .case-portrait-fallback{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 2.4rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+    position: relative;
+  }
+
+  .case-portrait-fallback::before{
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--glow);
+    box-shadow: 0 0 16px 4px var(--glow-soft);
+    top: 50%;
+    left: 50%;
+    transform: translate(48px, -38px);
+    opacity: 0.7;
+  }
+
+  .case-card.in-view{
+    animation: cardIn 0.8s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+
+  @keyframes cardIn{
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  .case-card::before{
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -20%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, var(--glow-dim) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+  }
+
+  .case-card:hover{
+    transform: translateY(-4px);
+    border-color: rgba(232, 217, 168, 0.25);
+    background: rgba(32, 32, 35, 0.65);
+    box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6);
+  }
+
+  .case-card:hover::before{ opacity: 1; }
+
+  .case-card-top{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .status-light{
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+    position: relative;
+  }
+
+  .status-light.found{
+    background: var(--status-found);
+    box-shadow: 0 0 8px 1px rgba(159, 184, 159, 0.5);
+  }
+  .status-light.unresolved{
+    background: var(--status-unresolved);
+    box-shadow: 0 0 8px 1px rgba(201, 169, 110, 0.5);
+    animation: flicker 3.2s ease-in-out infinite;
+  }
+  .status-light.mystery{
+    background: var(--status-mystery);
+    box-shadow: 0 0 8px 1px rgba(160, 143, 176, 0.5);
+    animation: flicker 1.7s ease-in-out infinite;
+  }
+
+  @keyframes flicker{
+    0%, 100%{ opacity: 1; }
+    45%{ opacity: 0.45; }
+    55%{ opacity: 0.85; }
+    70%{ opacity: 0.5; }
+  }
+
+  .case-status-text{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .case-status-text.found{ color: var(--status-found); }
+  .case-status-text.unresolved{ color: var(--status-unresolved); }
+  .case-status-text.mystery{ color: var(--status-mystery); }
+
+  .case-name{
+    font-family: 'Fraunces', serif;
+    font-size: 1.3rem;
+    font-weight: 500;
+    margin-bottom: 6px;
+    line-height: 1.25;
+  }
+
+  .case-meta{
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+  }
+
+  .case-summary{
+    font-size: 0.88rem;
+    color: var(--ink-dim);
+    font-weight: 300;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .case-tags{
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .case-tag{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid var(--line);
+    color: var(--ink-faint);
+  }
+
+  .empty-state{
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  /* ---------- Detail overlay ---------- */
+  .overlay{
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 60px 20px;
+    overflow-y: auto;
+  }
+
+  .overlay.open{ display: flex; }
+
+  .overlay-backdrop{
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 6, 7, 0.75);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  .overlay.open .overlay-backdrop{ opacity: 1; }
+
+  .overlay-panel{
+    position: relative;
+    z-index: 1;
+    max-width: 660px;
+    width: 100%;
+    background: rgba(20, 20, 22, 0.88);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 48px 44px;
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    box-shadow: 0 40px 100px -30px rgba(0,0,0,0.7);
+    transform: translateY(24px) scale(0.98);
+    opacity: 0;
+    transition: transform 0.45s cubic-bezier(.2,.8,.2,1), opacity 0.45s ease;
+  }
+
+  .overlay.open .overlay-panel{
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .overlay-close{
+    position: absolute;
+    top: 28px;
+    right: 28px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+  }
+
+  .overlay-close:hover{
+    border-color: var(--glow-soft);
+    color: var(--glow);
+    transform: rotate(90deg);
+  }
+
+  .overlay-portrait{
+    width: 100%;
+    max-height: 360px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    background: linear-gradient(160deg, #1a1a1c 0%, #101011 100%);
+    border: 1px solid var(--line-soft);
+  }
+
+  .overlay-portrait img{
+    width: 100%;
+    height: 100%;
+    max-height: 360px;
+    object-fit: cover;
+    object-position: center top;
+    filter: grayscale(100%) contrast(1.05) brightness(0.95);
+    display: block;
+  }
+
+  .overlay-status{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .overlay-name{
+    font-size: clamp(1.7rem, 4vw, 2.3rem);
+    margin-bottom: 8px;
+  }
+
+  .overlay-meta{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-bottom: 28px;
+    line-height: 1.8;
+  }
+
+  .overlay-meta strong{
+    color: var(--ink-dim);
+    font-weight: 400;
+  }
+
+  .overlay-divider{
+    height: 1px;
+    background: var(--line-soft);
+    margin: 26px 0;
+  }
+
+  .overlay-body p{
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: var(--ink-dim);
+    font-weight: 300;
+    margin-bottom: 16px;
+  }
+
+  .overlay-source{
+    margin-top: 30px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--ink-faint);
+    padding-top: 18px;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  /* ---------- About / footer ---------- */
+  .about{
+    padding: 100px 0;
+    border-top: 1px solid var(--line-soft);
+    margin-top: 60px;
+  }
+
+  .about-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+  }
+
+  .about h2{
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-weight: 400;
+    margin-bottom: 20px;
+    line-height: 1.25;
+  }
+
+  .about p{
+    color: var(--ink-dim);
+    font-weight: 300;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin-bottom: 16px;
+  }
+
+  .resource-list{
+    list-style: none;
+  }
+
+  .resource-list li{
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .resource-list a{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--ink);
+    font-size: 0.95rem;
+    transition: color 0.25s ease;
+  }
+
+  .resource-list a:hover{ color: var(--glow); }
+
+  .resource-list .arrow{
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink-faint);
+    transition: transform 0.25s ease;
+  }
+
+  .resource-list a:hover .arrow{
+    transform: translateX(4px);
+    color: var(--glow);
+  }
+
+  .resource-sub{
+    display: block;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-top: 4px;
+    font-weight: 300;
+  }
+
+  footer{
+    border-top: 1px solid var(--line-soft);
+    padding: 36px 0 50px;
+  }
+
+  .footer-inner{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .footer-text{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+
+  .footer-disclaimer{
+    max-width: 1100px;
+    margin: 0 auto 30px;
+    padding: 0 28px;
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 760px){
+    .stats{ grid-template-columns: 1fr; }
+    .stat{ border-right: none; border-bottom: 1px solid var(--line-soft); }
+    .stat:last-child{ border-bottom: none; }
+    .about-grid{ grid-template-columns: 1fr; gap: 40px; }
+    .nav-links{ gap: 16px; font-size: 0.78rem; }
+    .overlay-panel{ padding: 36px 24px; }
+  }
+
+  /* ---------- Focus visibility ---------- */
+  a:focus-visible, button:focus-visible{
+    outline: 1px solid var(--glow);
+    outline-offset: 3px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="firefly-canvas"></canvas>
+
+<div class="shell">
+
+  <nav>
+    <div class="nav-inner">
+      <div class="brand">
+        <span class="brand-mark">Fireflies</span>
+        <span class="brand-by mono">by projectAdnan</span>
+      </div>
+      <div class="nav-links">
+        <a href="#archive">Archive</a>
+        <a href="#about">About</a>
+        <a href="#resources">Resources</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-eyebrow mono">a tribute</div>
+    <h1>The <em>fireflies</em><br>that died too early.</h1>
+    <p class="hero-tag">Every name here was a child first. This is a quiet place to remember them — found, missing, and unexplained alike.</p>
+    <div class="hero-scroll">
+      <span>scroll</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 4v16m0 0l-6-6m6 6l6-6"/></svg>
+    </div>
+  </header>
+
+  <section class="stats" id="stats">
+    <div class="stat">
+      <div class="stat-num unresolved" id="stat-unresolved">0</div>
+      <div class="stat-label">still missing</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num found" id="stat-found">0</div>
+      <div class="stat-label">found &amp; reunited</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num mystery" id="stat-mystery">0</div>
+      <div class="stat-label">unexplained</div>
+    </div>
+  </section>
+
+  <main class="container">
+    <section class="section" id="archive">
+      <div class="section-head">
+        <div class="section-eyebrow mono">the archive</div>
+        <h2>Cases we carry with us.</h2>
+        <p>A small, curated collection of public missing-child cases — some resolved, some still open, some that may never fully be explained. Click a name to read more.</p>
+        <p style="margin-top:10px; font-size:0.78rem; color:var(--ink-faint);">Photos shown are official NCMEC missing-child posters, distributed for public awareness and identification.</p>
+      </div>
+
+      <div class="filters" id="filters">
+        <button class="filter-btn active" data-filter="all">All cases</button>
+        <button class="filter-btn" data-filter="unresolved"><span class="dot" style="background:var(--status-unresolved)"></span>Still missing</button>
+        <button class="filter-btn" data-filter="found"><span class="dot" style="background:var(--status-found)"></span>Found</button>
+        <button class="filter-btn" data-filter="mystery"><span class="dot" style="background:var(--status-mystery)"></span>Mysterious</button>
+      </div>
+
+      <div class="case-grid" id="case-grid"></div>
+      <div class="empty-state" id="empty-state" style="display:none;">No cases match this filter yet.</div>
+    </section>
+
+    <section class="about" id="about">
+      <div class="about-grid">
+        <div>
+          <h2>Why "Fireflies"?</h2>
+          <p>A firefly's light is brief — a small, bright signal in the dark, gone before you've had time to really look at it. That's how it feels to read these names. Each one was, however briefly, a light in someone's life.</p>
+          <p>This site doesn't try to be an alert system or an investigative tool. Law enforcement and NCMEC do that work, and do it far better than a website like this ever could. This is something smaller: a place to sit with the names, read what's known, and not look away.</p>
+          <p>Case details here are drawn from public law enforcement statements, NCMEC records, and reputable news reporting. We try to be careful and factual — if you spot an error, please let us know.</p>
+        </div>
+        <div id="resources">
+          <h2>If you need help</h2>
+          <ul class="resource-list">
+            <li>
+              <a href="https://www.missingkids.org" target="_blank" rel="noopener">
+                <span>NCMEC<span class="resource-sub">Report a missing child, 24/7 hotline</span></span>
+                <span class="arrow">→</span>
+              </a>
+            </li>
+            <li>
+              <a href="tel:18008435678">
+                <span>1-800-843-5678<span class="resource-sub">NCMEC 24-hour call center</span></span>
+                <span class="arrow">→</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://amberalert.ojp.gov" target="_blank" rel="noopener">
+                <span>AMBER Alert (DOJ)<span class="resource-sub">Official national alert program</span></span>
+                <span class="arrow">→</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.namus.gov" target="_blank" rel="noopener">
+                <span>NamUs<span class="resource-sub">National missing &amp; unidentified persons system</span></span>
+                <span class="arrow">→</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-disclaimer">
+      Fireflies is an independent tribute project and is not affiliated with NCMEC, AMBER Alert, or any law enforcement agency. It is not a reporting tool — if you have information about a missing person, please contact local law enforcement or NCMEC directly.
+    </div>
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-text mono">fireflies — projectAdnan</span>
+        <span class="footer-text mono">in memory of every light that went out too soon</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- Detail overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-backdrop" id="overlay-backdrop"></div>
+  <div class="overlay-panel">
+    <button class="overlay-close" id="overlay-close" aria-label="Close">✕</button>
+    <div class="overlay-portrait" id="ov-portrait" style="display:none;">
+      <img id="ov-portrait-img" alt="">
+    </div>
+    <div class="overlay-status">
+      <span class="status-light" id="ov-light"></span>
+      <span class="case-status-text" id="ov-status-text"></span>
+    </div>
+    <h3 class="overlay-name" id="ov-name"></h3>
+    <div class="overlay-meta" id="ov-meta"></div>
+    <div class="overlay-divider"></div>
+    <div class="overlay-body" id="ov-body"></div>
+    <div class="overlay-source" id="ov-source"></div>
+  </div>
+</div>
+
+<script src="cases.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
